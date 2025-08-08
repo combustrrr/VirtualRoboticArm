@@ -48,24 +48,23 @@ VirtualRoboticArm/
 │   ├── real_cad_integration.py            # CAD integration
 │   └── interactive_matplotlib_arm.py      # Matplotlib interface
 ├── assets/                                # Project assets
-│   ├── textures/                          # Realistic textures
+│   ├── realistic_textures/                # Realistic textures
 │   ├── models/                            # 3D models and CAD files
 │   └── texture_enhancement_demo/          # Texture demos
 ├── demos/                                 # Demonstration materials
-│   ├── enhanced_jcb_interactive_demo.gif  # Main demonstration
-│   ├── interactive_jcb_robotic_arm_demo.gif
-│   └── *.png                             # Technical analysis images
+│   └── enhanced_jcb_interactive_demo.gif  # Main demonstration
 ├── docs/                                  # Documentation
 │   ├── README_CAD_INTEGRATION.md         # CAD integration guide
 │   ├── README_ENHANCED.md                # Enhanced features
 │   └── INTERACTIVE_USAGE_GUIDE.md        # Usage instructions
+├── requirements.txt                       # Python dependencies
 └── main.py                               # Main entry point
 ```
 
 ## 🔧 Dependencies
 
 ```bash
-pip install pybullet numpy matplotlib opencv-python pillow
+pip install -r requirements.txt
 ```
 
 ## 🎬 Demonstrations
