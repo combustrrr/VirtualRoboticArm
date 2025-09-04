@@ -442,31 +442,29 @@ def create_enhanced_web_interface():
 
         <div id="simulation" class="tab-content">
             <div class="simulation-canvas" id="simulationCanvas">
-                <canvas id="robotCanvas" width="800" height="400" style="border: 1px solid #ccc; background: #222;">
-                    <div style="text-align: center; color: white; padding: 50px;">
-                        <h3>🎬 Real-time 3D Robot Simulation</h3>
-                        <p>3D PyBullet robotic arm visualization</p>
-                        <div id="armVisualization" style="margin: 20px 0;">
-                            <!-- Robot arm will be rendered here -->
-                            <div id="armStructure" style="position: relative; width: 100%; height: 300px;">
-                                <!-- Base -->
-                                <div id="armBase" style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 80px; height: 30px; background: linear-gradient(45deg, #FFD700, #FFA500); border-radius: 8px; border: 2px solid #FF8C00;"></div>
-                                <!-- Boom -->
-                                <div id="armBoom" style="position: absolute; bottom: 25px; left: 50%; transform-origin: bottom center; width: 20px; height: 120px; background: linear-gradient(45deg, #FFD700, #FFA500); border-radius: 4px; transform: translateX(-50%) rotate(-30deg);"></div>
-                                <!-- Stick -->
-                                <div id="armStick" style="position: absolute; bottom: 140px; left: calc(50% + 35px); transform-origin: bottom center; width: 16px; height: 96px; background: linear-gradient(45deg, #FFD700, #FFA500); border-radius: 4px; transform: translateX(-50%) rotate(45deg);"></div>
-                                <!-- Bucket -->
-                                <div id="armBucket" style="position: absolute; bottom: 220px; left: calc(50% + 90px); transform-origin: bottom center; width: 32px; height: 20px; background: linear-gradient(45deg, #555, #333); border-radius: 4px; transform: translateX(-50%) rotate(-15deg);"></div>
-                                <!-- Hydraulic cylinders -->
-                                <div id="hydraulic1" style="position: absolute; bottom: 45px; left: calc(50% + 15px); width: 8px; height: 40px; background: #666; border-radius: 2px;"></div>
-                                <div id="hydraulic2" style="position: absolute; bottom: 100px; left: calc(50% + 45px); width: 6px; height: 30px; background: #666; border-radius: 2px;"></div>
-                            </div>
-                        </div>
-                        <div id="robotStatus" style="font-family: monospace; font-size: 12px; color: #0f0;">
-                            Robot Status: Ready | Joints: [0°, -30°, 45°, -15°] | End Effector: (2.1m, 0.8m, 1.5m)
+                <div style="text-align: center; color: white; padding: 20px;">
+                    <h3>🎬 Real-time 3D Robot Simulation</h3>
+                    <p>3D PyBullet robotic arm visualization</p>
+                    <div id="armVisualization" style="margin: 20px 0; background: #222; border-radius: 8px; padding: 20px; border: 1px solid #ccc;">
+                        <!-- Robot arm will be rendered here -->
+                        <div id="armStructure" style="position: relative; width: 100%; height: 300px;">
+                            <!-- Base -->
+                            <div id="armBase" style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 80px; height: 30px; background: linear-gradient(45deg, #FFD700, #FFA500); border-radius: 8px; border: 2px solid #FF8C00;"></div>
+                            <!-- Boom -->
+                            <div id="armBoom" style="position: absolute; bottom: 25px; left: 50%; transform-origin: bottom center; width: 20px; height: 120px; background: linear-gradient(45deg, #FFD700, #FFA500); border-radius: 4px; transform: translateX(-50%) rotate(-30deg);"></div>
+                            <!-- Stick -->
+                            <div id="armStick" style="position: absolute; bottom: 140px; left: calc(50% + 35px); transform-origin: bottom center; width: 16px; height: 96px; background: linear-gradient(45deg, #FFD700, #FFA500); border-radius: 4px; transform: translateX(-50%) rotate(45deg);"></div>
+                            <!-- Bucket -->
+                            <div id="armBucket" style="position: absolute; bottom: 220px; left: calc(50% + 90px); transform-origin: bottom center; width: 32px; height: 20px; background: linear-gradient(45deg, #555, #333); border-radius: 4px; transform: translateX(-50%) rotate(-15deg);"></div>
+                            <!-- Hydraulic cylinders -->
+                            <div id="hydraulic1" style="position: absolute; bottom: 45px; left: calc(50% + 15px); width: 8px; height: 40px; background: #666; border-radius: 2px;"></div>
+                            <div id="hydraulic2" style="position: absolute; bottom: 100px; left: calc(50% + 45px); width: 6px; height: 30px; background: #666; border-radius: 2px;"></div>
                         </div>
                     </div>
-                </canvas>
+                    <div id="robotStatus" style="font-family: monospace; font-size: 12px; color: #0f0; margin-top: 10px;">
+                        Robot Status: Ready | Joints: [0°, -30°, 45°, -15°] | End Effector: (2.1m, 0.8m, 1.5m)
+                    </div>
+                </div>
             </div>
             <div class="control-group">
                 <h3>⚙️ Simulation Controls</h3>
