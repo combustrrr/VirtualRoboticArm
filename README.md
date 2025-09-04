@@ -4,11 +4,42 @@ A comprehensive simulation system featuring a professional JCB-style robotic arm
 
 ## 🚀 Quick Start
 
+### Automatic Setup (Recommended)
 ```bash
 python main.py
 ```
 
+The application will automatically:
+- ✅ Check for required dependencies 
+- 🚀 Install missing packages automatically
+- 🎉 Launch the web interface when ready
+
+### Manual Setup (Alternative)
+```bash
+# Install dependencies manually
+python setup.py
+
+# Or using pip directly
+pip install -r requirements.txt
+
+# Then run the application
+python main.py
+```
+
 Select the Enhanced Web-Based Interface for a comprehensive robotic arm simulation experience with all features integrated into a single, modern web interface.
+
+## 🔧 Development Setup
+
+### VS Code Integration
+The project includes comprehensive VS Code launch configurations:
+- **Launch Virtual Robotic Arm**: Main entry point with automatic dependency setup
+- **Launch Web Interface Directly**: Skip menu and go straight to web interface  
+- **Debug Virtual Robotic Arm**: Full debugging with breakpoints
+
+### Port Management
+- Automatic port detection (8080-8090 range)
+- No more manual port closure needed between runs
+- Clear feedback when ports are occupied
 
 ## 🌐 Enhanced Web Interface
 

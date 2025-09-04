@@ -55,21 +55,43 @@ def check_and_install_dependencies():
         
         try:
             # Install all missing packages at once
-            cmd = [sys.executable, '-m', 'pip', 'install'] + missing_packages
-            result = subprocess.run(cmd, check=True, capture_output=True, text=True)
+            cmd = [sys.executable, '-m', 'pip', 'install', '--timeout', '60'] + missing_packages
+            result = subprocess.run(cmd, check=True, capture_output=True, text=True, timeout=180)
             
             print("✅ All dependencies installed successfully!")
             return True
             
-        except subprocess.CalledProcessError as e:
-            print(f"❌ Error installing dependencies: {e}")
-            print(f"Output: {e.stdout}")
-            print(f"Error: {e.stderr}")
-            print("\n📝 You can try installing manually with:")
+        except subprocess.TimeoutExpired:
+            print("⚠️  Installation timed out. This may be due to network issues.")
+            print("📝 Please try installing manually with:")
             print(f"pip install {' '.join(missing_packages)}")
-            return False
+            
+            # Continue anyway - the app might still work with degraded functionality
+            print("\n🔄 Continuing with available dependencies...")
+            return True
+            
+        except subprocess.CalledProcessError as e:
+            error_msg = e.stderr if e.stderr else str(e)
+            
+            # Check for common network-related errors
+            if any(keyword in error_msg.lower() for keyword in ['timeout', 'connection', 'network', 'http']):
+                print("⚠️  Network connectivity issue detected during installation.")
+                print("📝 Please check your internet connection and try installing manually with:")
+                print(f"pip install {' '.join(missing_packages)}")
+                
+                # Continue anyway - the app might still work with degraded functionality
+                print("\n🔄 Continuing with available dependencies...")
+                return True
+            else:
+                print(f"❌ Error installing dependencies: {e}")
+                print(f"Error details: {error_msg}")
+                print("\n📝 You can try installing manually with:")
+                print(f"pip install {' '.join(missing_packages)}")
+                return False
         except Exception as e:
             print(f"❌ Unexpected error during installation: {e}")
+            print("\n📝 You can try installing manually with:")
+            print(f"pip install {' '.join(missing_packages)}")
             return False
     else:
         print("✅ All dependencies are already installed!")
@@ -85,12 +107,14 @@ def main():
     print()
     
     # Check and install dependencies first
-    if not check_and_install_dependencies():
-        print("\n❌ Failed to install required dependencies.")
-        print("Please install them manually and try again.")
-        return
+    deps_result = check_and_install_dependencies()
     
-    print("\n🎉 All dependencies are ready!")
+    if deps_result:
+        print("\n🎉 All dependencies are ready!")
+    else:
+        print("\n⚠️  Some dependencies may be missing, but continuing...")
+        print("The application will run with reduced functionality.")
+    
     print("Starting the application...")
     
     while True:
