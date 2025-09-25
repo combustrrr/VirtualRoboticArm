@@ -1,0 +1,137 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Robotic Arm | JCB Forward Kinematics</title>
+        <script src="puma560_assets/js/mathjs/math.js"></script>
+        <script src="puma560_assets/js/mathjs/math.min.js"></script>
+        <script src="puma560_assets/js/plotly-latest.min.js"></script>
+        <script src="puma560_assets/js/MathJax.js"></script>
+        <script type="text/javascript" async
+        src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=AM_CHTML"></script>
+
+    <link rel="stylesheet" type="text/css" href="puma560_assets/css/style.css">
+
+        <script type="text/javascript" src="puma560_assets/js/threejs/three.min.js"></script>
+        <script type="text/javascript" src="puma560_assets/js/threejs/TrackballControls.js"></script>
+        <script type="text/javascript" src="puma560_assets/js/threejs/Detector.js"></script>
+        <script type="text/javascript" src="puma560_assets/js/threejs/stats.min.js"></script>
+
+
+        <script type="text/javascript" src="puma560_assets/js/axis.js"></script>
+        <script type="text/javascript" src="puma560_assets/js/PUMA_scene.js"></script>
+        <script type="text/javascript" src="puma560_assets/js/PUMA_controller.js"></script>
+        <script src="puma560_assets/js/PUMA_tmat.js" type="text/javascript"></script>
+        <script src="puma560_assets/js/graph.js" type="text/javascript"></script>
+
+        <!--Load fonts-->
+        <script src="puma560_assets/fonts/gentilis_bold.typeface.js"></script>
+        <script src="puma560_assets/fonts/gentilis_regular.typeface.js"></script>
+        <script src="puma560_assets/fonts/optimer_bold.typeface.js"></script>
+        <script src="puma560_assets/fonts/optimer_regular.typeface.js"></script>
+        <script src="puma560_assets/fonts/helvetiker_bold.typeface.js"></script>
+        <script src="puma560_assets/fonts/helvetiker_regular.typeface.js"></script>
+        <script src="puma560_assets/fonts/droid_sans_regular.typeface.js"></script>
+        <script src="puma560_assets/fonts/droid_sans_bold.typeface.js"></script>
+        <script src="puma560_assets/fonts/droid_serif_regular.typeface.js"></script>
+        <script src="puma560_assets/fonts/droid_serif_bold.typeface.js"></script>
+
+    </head>
+    <body onload="myFunction()">
+        <header class="brand-header" id="experiment-header-logo">
+            <div class="brand-title">Virtual Robotic Arm</div>
+            <div class="brand-subtitle">JCB Forward Kinematics Control Center</div>
+            <div class="brand-badge">Immersive browser-based command suite</div>
+        </header>
+
+        <main id="main-wrapper">
+
+
+            <div id="input-wrapper" >
+                <div id="input-title">Mission Console</div>
+                <div id="input-view">
+                    <fieldset>
+                        <legend><strong>Briefing</strong></legend>
+                        <ul>
+                            <li>The Virtual Robotic Arm JCB Edition mirrors the six degree-of-freedom PUMA 560 manipulator used across our digital twin demos.</li>
+                            <li>Dial in joint angles to inspect reach envelopes and plan operations for on-site excavators and robotic tooling.</li>
+                            <li>Joint feedback is streamed from high-precision encoders and relayed through our forward-kinematics stack for real-time visualization.</li>
+                        </ul>
+                    </fieldset>
+                    <fieldset>
+                        <center><legend><b>Input Theta Values</b></legend></center>
+                        <p id="jrv-msg" class="alert-msg"></p>
+                        <center><table>
+                                <tr><td width="30"><b>`theta_1`</b></td> <td><input type="text" name="size1" size="2"  value="0" id="th1"></td></tr>
+                                <tr><td><b>`theta_2`</b></td> <td><input type="text" name="size2" size="2"  value="0" id="th2"></td></tr>
+                                <tr><td><b>`theta_3`</b></td> <td><input type="text" name="size3" size="2"  value="0" id="th3"></td></tr>
+                                <tr><td><b>`theta_4`</b></td> <td><input type="text" name="size4" size="2"  value="0" id="th4"></td></tr>
+                                <tr><td><b>`theta_5`</b></td> <td><input type="text" name="size5" size="2"  value="0" id="th5"></td></tr>
+                                <tr><td><b>`theta_6`</b></td> <td><input type="text" name="size6" size="2"  value="0" id="th6"></td></tr>
+                                <tr><td colspan ="2" align = "center"><input type="button" value="SUBMIT" onclick="myFunction()"></td></tr>
+                            </table> </center><br></fieldset>
+                    <center><fieldset>
+                        <legend><strong style="padding-bottom: 10px;">Transformation Matrix</strong></legend>
+                        <p id="demo"></p>
+                    </fieldset></center>
+                </div>
+            </div><!-- End of Input wrapper-->
+            <div id="canvas3d-wrapper">
+                <div id="canvas3d-title">3D Workspace</div>
+                <div id="canvas3d-view"></div>
+            </div><!-- End of canvas3d wrapper-->
+
+            <div id="controller-graph-wrapper">
+
+                <div id="controller-wrapper">
+                    <div id="controller-title">Joint Controls</div>
+                    <fieldset><div id="controller-view">
+                        <label class="joint-label" >Waist Joint</label>&nbsp;&nbsp;
+                        <input id="slider1" type="range" min="-160" max="160" step="2" value="0" oninput="sliderChange()" style="width:180px">&nbsp;&nbsp;
+                        <input id="rangeValue1"  type="text" size="2" value="0"><br><br>
+                        <label  class="joint-label">Shoulder Joint </label>&nbsp;&nbsp;
+                        <input id="slider2" type="range" min="-225" max="45" step="2" value="0" oninput="sliderChange()" style="width:180px">&nbsp;&nbsp;
+                        <input id="rangeValue2" type="text" size="2" value="0"><br><br>
+                        <label class="joint-label">Elbow Joint</label>&nbsp;&nbsp;
+                        <input id="slider3" type="range"  min="-225" max="45" step="2" value="0" oninput="sliderChange()" style="width:180px">&nbsp;&nbsp;
+                        <input id="rangeValue3" type="text" size="2" value="0"><br><br>
+                        <label class="joint-label">Wrist Roll</label>&nbsp;&nbsp;
+                        <input id="slider4" type="range" min="-110" max="170" step="2" value="0" oninput="sliderChange()" style="width:180px">&nbsp;&nbsp;
+                        <input id="rangeValue4" type="text" size="2" value="0"><br><br>
+                        <label class="joint-label">Wrist Bend</label>&nbsp;&nbsp;
+                        <input id="slider5" type="range" min="-100" max="100" step="2" value="0" oninput="sliderChange()" style="width:180px">&nbsp;&nbsp;
+                        <input id="rangeValue5" type="text" size="2" value="0"><br><br>
+                        <label class="joint-label">Wrist Swivel</label>&nbsp;&nbsp;
+                        <input id="slider6" type="range" min="-266" max="266" step="2" value="0" oninput="sliderChange()" style="width:180px">&nbsp;&nbsp;
+                        <input id="rangeValue6" type="text" size="2" value="0">
+					<br>
+					<br>
+					<p></p>
+                        <!--<input id="sv" type="button" value="CLICK" onclick="getslidervalue()" title="Click to see Transformation Matrix">
+					&nbsp;-->
+                        <input id="csv" type="button" value="CLEAR" onclick="clearslidervalue()" title="Click to Reset">
+					&nbsp;
+					<input id="workspace" type="button" value="WORKSPACE" onclick="workspace()" title="Click to See Workspace">
+					&nbsp;
+					<input id="trajectory" type="button" value="Trajectory" onclick="pumachange()" title="Click to See the manipulator path trajectory">
+                    </div>  </fieldset>
+                </div>
+                <div id="graph-wrapper">
+                    <div id="graph-title">Manipulator Position</div>
+                    <div id="graph-view"></div>
+                </div>
+            </div><!-- End of Controller wrapper-->
+        </main><!-- End of main wrapper-->
+
+        <footer class="default" id="lab-footer">
+            <div class="footer-content">
+                <span>Virtual Robotic Arm &bull; JCB Edition</span>
+                <span class="footer-divider">|</span>
+                <span>Forward Kinematics simulator built on the VirtualRoboticArm stack</span>
+            </div>
+        </footer>
+    </body>
+
+</html>

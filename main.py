@@ -4,13 +4,39 @@ Main entry point for the Virtual Robotic Arm simulation
 """
 import sys
 import os
+import argparse
 
 def main():
-    """Main demonstration function"""
+    """Default to launching the browser-based simulator."""
+    parser = argparse.ArgumentParser(
+        description="Virtual Robotic Arm launcher"
+    )
+    parser.add_argument(
+        "--menu",
+        action="store_true",
+        help="Open the legacy text menu with all simulation modes"
+    )
+    args = parser.parse_args()
+
+    if args.menu:
+        legacy_menu_loop()
+        return
+
+    print("=" * 70)
+    print("VIRTUAL ROBOTIC ARM • JCB FORWARD KINEMATICS HUB")
+    print("=" * 70)
+    print("Launching immersive browser experience...")
+    print("Press Ctrl+C to stop the server once you're done.\n")
+
+    run_web_interactive_arm()
+
+
+def legacy_menu_loop():
+    """Legacy interactive menu exposing the full experience suite."""
     print("=" * 60)
     print("INTERACTIVE 3D JCB ROBOTIC ARM MINI PROJECT")
     print("=" * 60)
-    
+
     while True:
         print("\nSelect simulation mode:")
         print("1. Enhanced CAD Interactive Arm (Recommended)")
@@ -19,13 +45,13 @@ def main():
         print("4. Matplotlib Visualization")
         print("5. Realistic Texture Demo")
         print("6. Exit")
-        
+
         try:
             choice = input("\nEnter your choice (1-6): ").strip()
         except KeyboardInterrupt:
             print("\nExiting...")
             sys.exit(0)
-        
+
         if choice == "1":
             run_enhanced_cad_interactive_arm()
         elif choice == "2":

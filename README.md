@@ -8,7 +8,15 @@ A comprehensive simulation system featuring a professional JCB-style robotic arm
 python main.py
 ```
 
-Select from multiple simulation modes:
+This launches the JCB-themed browser experience instantly and opens `http://localhost:8080` with the refreshed Virtual Robotic Arm control center.
+
+Need the legacy menu with every simulation mode? Launch it explicitly:
+
+```bash
+python main.py --menu
+```
+
+Legacy menu options include:
 1. **Enhanced CAD Interactive Arm** (Recommended) - Full-featured 4-DOF control
 2. **Web-Based Interface** - Browser-based controls
 3. **Real CAD Integration** - Professional CAD file processing
@@ -92,7 +100,7 @@ python src/enhanced_cad_interactive_arm.py
 ### Web Interface
 ```python
 python src/web_interactive_arm.py
-# Open browser to http://localhost:8080
+# Opens the JCB Forward Kinematics hub at http://localhost:8080 automatically
 ```
 
 ### CAD Integration
