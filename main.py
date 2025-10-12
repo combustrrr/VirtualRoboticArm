@@ -6,15 +6,32 @@ import sys
 import os
 
 def main():
-    """Main demonstration function"""
+    """Main demonstration function - directly launch web interface"""
+    # Check for legacy menu option
+    if len(sys.argv) > 1 and sys.argv[1] == '--menu':
+        show_menu()
+        return
+    
+    # Direct web interface launch
+    print("=" * 60)
+    print("🚜 VIRTUAL JCB ROBOTIC ARM - WEB SIMULATOR")
+    print("=" * 60)
+    print("Starting browser-based 3D robotic arm simulator...")
+    print("Use --menu flag to access legacy simulation modes")
+    print()
+    
+    run_web_interactive_arm()
+
+def show_menu():
+    """Show legacy menu for backward compatibility"""
     print("=" * 60)
     print("INTERACTIVE 3D JCB ROBOTIC ARM MINI PROJECT")
     print("=" * 60)
     
     while True:
         print("\nSelect simulation mode:")
-        print("1. Enhanced CAD Interactive Arm (Recommended)")
-        print("2. Web-Based Interface")
+        print("1. Enhanced CAD Interactive Arm")
+        print("2. Web-Based Interface (Recommended)")
         print("3. Real CAD Integration")
         print("4. Matplotlib Visualization")
         print("5. Realistic Texture Demo")
@@ -67,25 +84,34 @@ def run_enhanced_cad_interactive_arm():
 
 
 def run_web_interactive_arm():
-    """Run Web Interactive Arm"""
-    print("\n" + "=" * 50)
-    print("LAUNCHING WEB-BASED INTERFACE")
-    print("=" * 50)
+    """Run Enhanced Web Interactive Arm"""
+    # Try enhanced version first, fall back to basic if needed
+    enhanced_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 
+                               'src', 'enhanced_web_interactive_arm.py')
+    basic_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 
+                            'src', 'web_interactive_arm.py')
     
-    src_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 
-                           'src', 'web_interactive_arm.py')
-    
-    if os.path.exists(src_path):
+    if os.path.exists(enhanced_path):
         try:
-            sys.path.insert(0, os.path.dirname(src_path))
+            sys.path.insert(0, os.path.dirname(enhanced_path))
+            import enhanced_web_interactive_arm
+            enhanced_web_interactive_arm.main()
+            return
+        except Exception as e:
+            print(f"Enhanced version failed: {e}")
+            print("Falling back to basic web interface...")
+    
+    if os.path.exists(basic_path):
+        try:
+            sys.path.insert(0, os.path.dirname(basic_path))
             import web_interactive_arm
             web_interactive_arm.main()
         except Exception as e:
             print(f"Error running Web Interactive Arm: {e}")
             print("You can also run it directly with:")
-            print("python src/web_interactive_arm.py")
+            print("python src/enhanced_web_interactive_arm.py")
     else:
-        print(f"Web Interactive Arm script not found at: {src_path}")
+        print(f"Web Interactive Arm scripts not found")
         print("Please ensure all source files are properly installed.")
 
 
