@@ -1,7 +1,4 @@
-"""
-Interactive 3D JCB Robotic Arm Mini Project
-Main entry point for the Virtual Robotic Arm simulation
-"""
+"""Entry point for the Virtual Robotic Arm toolkit."""
 import sys
 import os
 import subprocess
@@ -101,9 +98,9 @@ def check_and_install_dependencies():
 def main():
     """Main demonstration function"""
     print("=" * 60)
-    print("INTERACTIVE 3D JCB ROBOTIC ARM MINI PROJECT")
+    print("PUMA 560 VIRTUAL ROBOTIC ARM")
     print("=" * 60)
-    print("Enhanced Web-Based Interface with Integrated Features")
+    print("Streamlit-driven digital twin with cinematic 3D rendering")
     print()
     
     # Check and install dependencies first
@@ -119,7 +116,7 @@ def main():
     
     while True:
         print("\nSelect interface mode:")
-        print("1. Enhanced Web-Based Interface (Comprehensive)")
+        print("1. Launch Streamlit interface")
         print("2. Exit")
         
         try:
@@ -138,25 +135,34 @@ def main():
 
 
 def run_web_interactive_arm():
-    """Run Enhanced Web Interactive Arm"""
+    """Launch the Streamlit-based experience."""
     print("\n" + "=" * 50)
-    print("LAUNCHING ENHANCED WEB-BASED INTERFACE")
+    print("LAUNCHING STREAMLIT INTERFACE")
     print("=" * 50)
     
     src_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 
-                           'src', 'web_interactive_arm.py')
+                           'src', 'streamlit_puma_interface.py')
     
     if os.path.exists(src_path):
         try:
-            sys.path.insert(0, os.path.dirname(src_path))
-            import web_interactive_arm
-            web_interactive_arm.main()
-        except Exception as e:
-            print(f"Error running Enhanced Web Interactive Arm: {e}")
-            print("You can also run it directly with:")
-            print("python src/web_interactive_arm.py")
+            import subprocess
+            print("Starting Streamlit server...")
+            print(f"Command: streamlit run {src_path}")
+            print("The application will open in your default web browser.")
+            print("Press Ctrl+C to stop the server.")
+            print()
+            
+            # Launch streamlit
+            subprocess.run([sys.executable, '-m', 'streamlit', 'run', src_path], 
+                         check=True)
+        except subprocess.CalledProcessError as e:
+            print(f"Error launching Streamlit: {e}")
+            print("You can also launch it manually with:")
+            print(f"streamlit run {src_path}")
+        except KeyboardInterrupt:
+            print("\nStopping Streamlit server...")
     else:
-        print(f"Enhanced Web Interactive Arm script not found at: {src_path}")
+        print(f"Streamlit application not found at: {src_path}")
         print("Please ensure all source files are properly installed.")
 
 
