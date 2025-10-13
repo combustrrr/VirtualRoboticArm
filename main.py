@@ -3,6 +3,28 @@ import sys
 import os
 import subprocess
 import importlib
+import logging
+from pathlib import Path
+
+
+REPO_ROOT = Path(__file__).resolve().parent
+SRC_PATH = REPO_ROOT / "src"
+
+if str(SRC_PATH) not in sys.path:
+    sys.path.insert(0, str(SRC_PATH))
+
+
+_IMPORT_NAME_OVERRIDES = {
+    "opencv-python": "cv2",
+    "opencv-python-headless": "cv2",
+    "pillow": "PIL",
+}
+
+from app.logging_utils import configure_logging, get_logger
+
+
+configure_logging("launcher")
+LOGGER = get_logger(__name__)
 
 def _get_requirements_file_path():
     """Get the path to requirements.txt file."""
@@ -12,7 +34,7 @@ def _get_requirements_file_path():
 def _read_requirements_file(requirements_path):
     """Read and parse requirements from requirements.txt file."""
     if not os.path.exists(requirements_path):
-        print("WARNING: requirements.txt not found. Skipping dependency check.")
+        LOGGER.warning("requirements.txt not found. Skipping dependency check.")
         return None
     
     try:
@@ -21,31 +43,34 @@ def _read_requirements_file(requirements_path):
                           if line.strip() and not line.strip().startswith('#')]
         return requirements
     except Exception as e:
-        print(f"ERROR: Failed to read requirements.txt: {e}")
+        LOGGER.exception("Failed to read requirements.txt")
         return False
 
 
 def _extract_package_name(requirement):
-    """Extract package name from requirement string, handling version specifiers."""
+    """Extract requirement and importable module names from a requirement string."""
     if not requirement:
-        return None
-        
-    # Extract package name (handle version specifiers)
-    package_name = requirement.split('>=')[0].split('==')[0].split('<')[0].split('>')[0].strip()
-    
-    # Special handling for opencv-python
-    if package_name == 'opencv-python':
-        package_name = 'cv2'
-    
-    return package_name
+        return None, None
+
+    requirement_name = requirement.split(';', 1)[0]
+    for delimiter in (">=", "<=", "==", "!=", "~=", ">", "<"):
+        requirement_name = requirement_name.split(delimiter)[0]
+
+    package_name = requirement_name.strip()
+    if not package_name:
+        return None, None
+
+    module_name = _IMPORT_NAME_OVERRIDES.get(package_name.lower(), package_name)
+    return package_name, module_name
 
 
-def _check_package_installed(package_name):
-    """Check if a package is installed."""
+def _check_package_installed(module_name):
+    """Check if a module is importable in the current environment."""
     try:
-        importlib.import_module(package_name)
+        importlib.import_module(module_name)
         return True
     except ImportError:
+        LOGGER.debug("Package not found: %s", module_name)
         return False
 
 
@@ -54,14 +79,14 @@ def _find_missing_packages(requirements):
     missing_packages = []
     
     for requirement in requirements:
-        package_name = _extract_package_name(requirement)
-        if not package_name:
+        package_name, module_name = _extract_package_name(requirement)
+        if not module_name:
             continue
             
-        if _check_package_installed(package_name):
-            print(f"FOUND: {package_name} is already installed")
+        if _check_package_installed(module_name):
+            LOGGER.info("Dependency ready: %s (requirement: %s)", module_name, requirement)
         else:
-            print(f"MISSING: {package_name} is not installed")
+            LOGGER.warning("Dependency missing: %s (module: %s)", requirement, module_name)
             missing_packages.append(requirement)
     
     return missing_packages
@@ -69,6 +94,7 @@ def _find_missing_packages(requirements):
 
 def _handle_installation_timeout(missing_packages):
     """Handle installation timeout gracefully."""
+    LOGGER.error("Installation timed out while installing dependencies")
     print("WARNING: Installation timed out. This may be due to network issues.")
     print("MANUAL INSTALLATION: Please try installing manually with:")
     print(f"pip install {' '.join(missing_packages)}")
@@ -78,6 +104,7 @@ def _handle_installation_timeout(missing_packages):
 
 def _handle_network_error(missing_packages):
     """Handle network-related installation errors."""
+    LOGGER.error("Network issue detected during dependency installation")
     print("WARNING: Network connectivity issue detected during installation.")
     print("MANUAL INSTALLATION: Please check your internet connection and try installing manually with:")
     print(f"pip install {' '.join(missing_packages)}")
@@ -88,6 +115,7 @@ def _handle_network_error(missing_packages):
 def _handle_installation_error(e, missing_packages):
     """Handle general installation errors."""
     error_msg = e.stderr if hasattr(e, 'stderr') and e.stderr else str(e)
+    LOGGER.error("Failed to install dependencies", exc_info=e)
     print(f"ERROR: Failed to install dependencies: {e}")
     print(f"Error details: {error_msg}")
     print("\nMANUAL INSTALLATION: You can try installing manually with:")
@@ -109,6 +137,7 @@ def _install_missing_packages(missing_packages):
     try:
         cmd = [sys.executable, '-m', 'pip', 'install', '--timeout', '60'] + missing_packages
         subprocess.run(cmd, check=True, capture_output=True, text=True, timeout=180)
+        LOGGER.info("Installed %s missing dependencies", len(missing_packages))
         print("SUCCESS: All dependencies installed successfully!")
         return True
         
@@ -123,6 +152,7 @@ def _install_missing_packages(missing_packages):
             return _handle_installation_error(e, missing_packages)
             
     except Exception as e:
+        LOGGER.exception("Unexpected error during dependency installation")
         print(f"ERROR: Unexpected error during installation: {e}")
         print("\nMANUAL INSTALLATION: You can try installing manually with:")
         print(f"pip install {' '.join(missing_packages)}")
@@ -131,6 +161,7 @@ def _install_missing_packages(missing_packages):
 
 def check_and_install_dependencies():
     """Check for required dependencies and install them if missing."""
+    LOGGER.info("Checking dependencies")
     print("Checking dependencies...")
     
     requirements_path = _get_requirements_file_path()
@@ -146,6 +177,7 @@ def check_and_install_dependencies():
     if missing_packages:
         return _install_missing_packages(missing_packages)
     else:
+        LOGGER.info("All dependencies already installed")
         print("SUCCESS: All dependencies are already installed!")
         return True
 
@@ -162,8 +194,10 @@ def _print_header():
 def _print_dependency_status(deps_result):
     """Print dependency check results."""
     if deps_result:
+        LOGGER.info("Dependency check completed successfully")
         print("\nREADY: All dependencies are ready!")
     else:
+        LOGGER.warning("Continuing with missing dependencies")
         print("\nWARNING: Some dependencies may be missing, but continuing...")
         print("The application will run with reduced functionality.")
 
@@ -178,6 +212,7 @@ def _get_user_choice():
         choice = input("\nEnter your choice (1-2): ").strip()
         return choice
     except KeyboardInterrupt:
+        LOGGER.info("Launcher interrupted by user")
         print("\nExiting...")
         sys.exit(0)
 
@@ -185,12 +220,15 @@ def _get_user_choice():
 def _handle_menu_choice(choice):
     """Handle the user's menu choice."""
     if choice == "1":
+        LOGGER.info("User selected Streamlit launch")
         launch_streamlit_interface()
         return False  # Continue menu loop
     elif choice == "2":
+        LOGGER.info("User exited application")
         print("Goodbye!")
         return True   # Exit menu loop
     else:
+        LOGGER.warning("Invalid menu choice: %s", choice)
         print("Invalid choice. Please enter 1-2.")
         return False  # Continue menu loop
 
@@ -206,12 +244,14 @@ def _run_main_menu():
 
 def main():
     """Main application entry point."""
+    LOGGER.info("Launcher started")
     _print_header()
     
     # Check and install dependencies first
     deps_result = check_and_install_dependencies()
     _print_dependency_status(deps_result)
     
+    LOGGER.info("Displaying launcher menu")
     print("Starting the application...")
     _run_main_menu()
 
@@ -224,6 +264,7 @@ def _get_streamlit_app_path():
 
 def _launch_streamlit_process(src_path):
     """Launch the Streamlit process."""
+    LOGGER.info("Starting Streamlit server via subprocess")
     print("Starting Streamlit server...")
     print(f"Command: streamlit run {src_path}")
     print("The application will open in your default web browser.")
@@ -231,10 +272,12 @@ def _launch_streamlit_process(src_path):
     print()
     
     subprocess.run([sys.executable, '-m', 'streamlit', 'run', src_path], check=True)
+    LOGGER.info("Streamlit process exited cleanly")
 
 
 def _handle_streamlit_error(e, src_path):
     """Handle Streamlit launch errors."""
+    LOGGER.error("Error launching Streamlit", exc_info=e)
     print(f"Error launching Streamlit: {e}")
     print("You can also launch it manually with:")
     print(f"streamlit run {src_path}")
@@ -249,6 +292,7 @@ def launch_streamlit_interface():
     src_path = _get_streamlit_app_path()
     
     if not os.path.exists(src_path):
+        LOGGER.error("Streamlit application missing: %s", src_path)
         print(f"Streamlit application not found at: {src_path}")
         print("Please ensure all source files are properly installed.")
         return
@@ -258,6 +302,7 @@ def launch_streamlit_interface():
     except subprocess.CalledProcessError as e:
         _handle_streamlit_error(e, src_path)
     except KeyboardInterrupt:
+        LOGGER.info("Streamlit launch interrupted by user")
         print("\nStopping Streamlit server...")
 
 
