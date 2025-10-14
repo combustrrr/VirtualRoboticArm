@@ -1,0 +1,137 @@
+\documentclass{article}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{url}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\geometry{a4paper, margin=1in}
+
+\title{A High-Fidelity Digital Twin of the PUMA 560 Robotic Arm for Interactive Web-Based Simulation}
+\author{
+Sarthak Kulkarni \\
+Dept. of Information Technology \\
+Vidyalankar Institute of Technology \\
+Mumbai, India \\
+\texttt{23101B0019@vit.edu.in}
+\and
+Dhruv Tikhande \\
+Dept. of Information Technology \\
+Vidyalankar Institute of Technology \\
+Mumbai, India \\
+\texttt{23101B0005@vit.edu.in}
+\and
+Pulkit Saini \\
+Dept. of Information Technology \\
+Vidyalankar Institute of Technology \\
+Mumbai, India \\
+\texttt{23101B0021@vit.edu.in}
+\and
+Atharv Petkar \\
+Dept. of Information Technology \\
+Vidyalankar Institute of Technology \\
+Mumbai, India \\
+\texttt{23101B0010@vit.edu.in}
+}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This paper presents the design and implementation of a high-fidelity, interactive digital twin for the PUMA 560 robotic arm, delivered as a web-based virtual laboratory. By integrating a Python backend utilizing libraries such as NumPy and Plotly with a Streamlit frontend, the system provides a robust, real-time simulation environment accessible from any modern web browser. The core of the user experience is a Three.js-rendered 3D model, which is dynamically updated based on user-controlled joint parameters. The platform computes and displays critical real-time analytics, including forward kinematics, end-effector position, Euler angles, velocity, and workspace utilization. Advanced features such as trajectory recording with multi-perspective Plotly visualizations and data export to CSV are implemented, making it a comprehensive tool for robotics education and research. The architecture, detailed within, emphasizes modularity, performance, and ease of deployment, requiring no local installation for the end-user.
+\end{abstract}
+
+\section{Introduction}
+The PUMA (Programmable Universal Machine for Assembly) 560, a 6-axis articulated robotic arm, remains a canonical system for teaching the principles of robotics. While physical labs are invaluable, they present challenges in accessibility, cost, and safety. Virtual laboratories offer a compelling solution. This paper details the creation of a modern digital twin of the PUMA 560, designed to replace legacy, plugin-dependent simulations with a performant, browser-native experience.
+
+Our system provides a complete virtual environment where users can manipulate the robot, observe its behavior in 3D, and analyze its kinematic state in real-time. The project’s architecture is rooted in a Python backend, with a user interface constructed using Streamlit. This approach allows for rapid development while leveraging powerful data science and visualization libraries. This work extends the foundational concepts of the IIT Kharagpur Virtual Labs’ PUMA 560 simulation by re-implementing it with a modern technology stack, focusing on interactivity, real-time analytics, and accessibility.
+
+\section{System Architecture}
+The architecture is designed for modularity, separating the core kinematic engine from the presentation layer. This ensures that the simulation logic is independent and can be easily maintained or extended.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{placeholder.png}
+    \caption{System architecture diagram illustrating the data flow between the user, the Streamlit UI, the Python backend, and the Three.js rendering component.}
+    \label{fig:system_architecture}
+\end{figure}
+
+\subsection{Backend Engine}
+The backend is implemented in Python and consists of several specialized modules located in the ‘src/app/‘ directory.
+\begin{itemize}
+    \item \textbf{Kinematics Module (kinematics.py):} This module is the heart of the simulation. It uses the Denavit-Hartenberg (DH) parameters specific to the PUMA 560 (Table \ref{tab:dh_parameters}) to execute forward kinematics calculations via the \texttt{forward\_kinematics} function. It also contains helpers like \texttt{rotation\_to\_euler} to convert the resulting rotation matrix into user-friendly Roll, Pitch, and Yaw angles.
+    \item \textbf{Trajectory Module (trajectory.py):} This module manages time-series data. The \texttt{create\_trajectory\_data\_point} function structures the robot’s state at a given moment, while \texttt{export\_trajectory\_csv} serializes the recorded data into a CSV file using Python’s standard csv library.
+    \item \textbf{Workspace Module (workspace.py):} This module provides functions for analyzing the robot’s reachable volume. The \texttt{generate\_workspace\_heatmap} function is capable of creating both 2D and 3D visualizations of manipulability using Plotly, offering insight into the robot’s dexterity across its operational envelope.
+    \item \textbf{Asset Management (assets.py):} The \texttt{build\_threejs\_html} function dynamically constructs the HTML and JavaScript payload required to render the 3D scene. It loads the necessary Three.js runtime, model geometry, and font files, and injects the current joint angles before passing the complete HTML document to the frontend.
+\end{itemize}
+
+\subsection{Frontend and User Interface}
+The UI is built with Streamlit, allowing for a pure Python implementation of a reactive web interface. The main interface code resides in \texttt{src/streamlit\_puma\_interface.py}.
+\begin{itemize}
+    \item \textbf{3D Visualization:} The robot model is rendered in an iframe using \texttt{streamlit.components.v1.html}. This component receives the dynamically generated HTML from the \texttt{assets.py} module, creating a sandboxed environment for the Three.js scene. This avoids conflicts with Streamlit’s own DOM.
+    \item \textbf{Interactive Controls:} The UI is dominated by six sliders created with \texttt{st.slider}, one for each joint. These sliders are initialized from and write back to \texttt{st.session\_state}, ensuring that the robot’s state persists across reruns. The joint limits are sourced from \texttt{constants.py} to match the physical robot’s constraints.
+    \item \textbf{Analytics Dashboard:} The right-hand column of the UI is dedicated to real-time analytics, organized within an \texttt{st.expander}. Key metrics are displayed using \texttt{st.metric}, and the current joint configuration is shown in a formatted JSON block with \texttt{st.json}.
+\end{itemize}
+
+\section{Key Features and Implementation}
+The platform provides a rich feature set designed for educational exploration.
+
+\subsection{Interactive Simulation and 3D Visualization}
+The main user interface, shown in Fig. \ref{fig:main_ui}, presents the 3D model and its controls side-by-side. The layout is managed by ‘st.columns‘, dedicating the left column to the robot visualization and joint sliders, and the right to the analytics panel. This immediate visual feedback is crucial for developing an intuitive understanding of the robot’s kinematics.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{placeholder.png}
+    \caption{The main user interface, showing the 3D robot model on the left, joint control sliders below it, and the real-time analytics panel on the right.}
+    \label{fig:main_ui}
+\end{figure}
+
+\begin{table}[h]
+    \centering
+    \caption{Denavit-Hartenberg Parameters for the PUMA 560}
+    \label{tab:dh_parameters}
+    \begin{tabular}{|c|c|c|c|c|}
+        \hline
+        \textbf{Joint (i)} & \textbf{\(\theta_i\) (rad)} & \textbf{\(d_i\) (m)} & \textbf{\(a_i\) (m)} & \textbf{\(\alpha_i\) (rad)} \\
+        \hline
+        1 & \(\theta_1\) & 0.0 & 0.0 & \(\pi/2\) \\
+        2 & \(\theta_2\) & 0.0 & 0.432 & 0.0 \\
+        3 & \(\theta_3\) & 0.1495 & 0.0203 & \(-\pi/2\) \\
+        4 & \(\theta_4\) & 0.432 & 0.0 & \(\pi/2\) \\
+        5 & \(\theta_5\) & 0.0 & 0.0 & \(-\pi/2\) \\
+        6 & \(\theta_6\) & 0.0 & 0.0 & 0.0 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\subsection{Real-Time Kinematic Analysis}
+As users adjust the joint angles, the backend continuously recalculates the robot’s state. The DH parameters, as listed in Table \ref{tab:dh_parameters}, are used to compute the transformation matrix for each link. The results are displayed in the ”End-Effector Analytics” expander, showing Cartesian position (X, Y, Z), Euler angles (Roll, Pitch, Yaw), linear velocity, and workspace utilization.
+
+\subsection{Trajectory Recording and Visualization}
+The system includes a full trajectory analysis suite. Users can start and stop recording, and the application will store a list of state dictionaries. When the recording is complete, the data is loaded into a Pandas DataFrame and visualized using Plotly within a set of ‘st.tabs‘, as shown in Fig. \ref{fig:trajectory_analysis}. The following plots are generated:
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{placeholder.png}
+    \caption{The Trajectory Analysis section, showing the tabbed interface with Plotly charts for joint angles over time and the 3D end-effector path.}
+    \label{fig:trajectory_analysis}
+\end{figure}
+
+\begin{itemize}
+    \item A timeline of all six joint angles.
+    \item A 3D scatter plot of the end-effector’s path through space.
+    \item Timelines of joint velocities and end-effector linear velocity.
+\end{itemize}
+The captured data can be exported to a CSV file with a single click.
+
+\section{Conclusion}
+This project successfully demonstrates the creation of a modern, web-based digital twin for the PUMA 560 robot. By leveraging a Python-centric stack with Streamlit and integrating a JavaScript-based 3D renderer, we have produced a tool that is both powerful for analysis and simple to access. The modular architecture and detailed, real-time analytics provide a robust foundation for robotics education. Future work could include the implementation of inverse kinematics to allow for Cartesian control, the integration of PyBullet for physics-based simulation and collision detection, and the development of more advanced workspace analysis tools.
+
+\section*{Acknowledgment}
+The authors acknowledge the foundational work of the IIT Kharagpur Virtual Labs project. The Three.js 3D model and its original JavaScript implementation were adapted from their ”Forward Kinematics of PUMA 560” experiment, which provided the core assets and inspiration for this modern re-implementation.
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}

@@ -1,0 +1,202 @@
+A High-Fidelity Digital Twin of the PUMA 560
+Robotic Arm for Interactive Web-Based Simulation
+Sarthak Kulkarni
+Dept. of Information Technology
+Vidyalankar Institute of Technology
+Mumbai, India
+23101B0019@vit.edu.in
+Dhruv Tikhande
+Dept. of Information Technology
+Vidyalankar Institute of Technology
+Mumbai, India
+23101B0005@vit.edu.in
+Pulkit Saini
+Dept. of Information Technology
+Vidyalankar Institute of Technology
+Mumbai, India
+23101B0021@vit.edu.in
+Atharv Petkar
+Dept. of Information Technology
+Vidyalankar Institute of Technology
+Mumbai, India
+23101B0010@vit.edu.in
+Abstract—This paper presents the design and implementation
+of a high-fidelity, interactive digital twin for the PUMA 560
+robotic arm, delivered as a web-based virtual laboratory. By
+integrating a Python backend utilizing libraries such as NumPy
+and Plotly with a Streamlit frontend, the system provides a
+robust, real-time simulation environment accessible from any
+modern web browser. The core of the user experience is a
+Three.js-rendered 3D model, which is dynamically updated based
+on user-controlled joint parameters. The platform computes and
+displays critical real-time analytics, including forward kinematics, end-effector position, Euler angles, velocity, and workspace
+utilization. Advanced features such as trajectory recording with
+multi-perspective Plotly visualizations and data export to CSV
+are implemented, making it a comprehensive tool for robotics
+education and research. The architecture, detailed within, emphasizes modularity, performance, and ease of deployment, requiring
+no local installation for the end-user.
+Index Terms—PUMA 560, robotic arm, digital twin, simulation, virtual laboratory, Streamlit, forward kinematics, Three.js,
+Python
+I. INTRODUCTION
+The PUMA (Programmable Universal Machine for Assembly) 560, a 6-axis articulated robotic arm, remains a canonical
+system for teaching the principles of robotics. While physical
+labs are invaluable, they present challenges in accessibility,
+cost, and safety. Virtual laboratories offer a compelling solution. This paper details the creation of a modern digital twin of
+the PUMA 560, designed to replace legacy, plugin-dependent
+simulations with a performant, browser-native experience.
+Our system provides a complete virtual environment where
+users can manipulate the robot, observe its behavior in 3D,
+and analyze its kinematic state in real-time. The project’s
+architecture is rooted in a Python backend, with a user
+interface constructed using Streamlit. This approach allows
+for rapid development while leveraging powerful data science
+and visualization libraries. This work extends the foundational
+This work is an extension and modernization of the PUMA 560 simulation
+from the IIT Kharagpur Virtual Lab, available at https://mr-iitkgp.vlabs.ac.in/
+exp/forward-kinematics/simulation/forward-kinematics-of-puma-560.html.
+concepts of the IIT Kharagpur Virtual Labs’ PUMA 560 simulation by re-implementing it with a modern technology stack,
+focusing on interactivity, real-time analytics, and accessibility.
+II. SYSTEM ARCHITECTURE
+The architecture is designed for modularity, separating the
+core kinematic engine from the presentation layer. This ensures
+that the simulation logic is independent and can be easily
+maintained or extended.
+A. Backend Engine
+The backend is implemented in Python and consists of
+several specialized modules located in the ‘src/app/‘ directory.
+• Kinematics Module (kinematics.py): This module
+is the heart of the simulation. It uses the DenavitHartenberg (DH) parameters specific to the PUMA 560
+(Table I) to execute forward kinematics calculations via
+the forward_kinematics function. It also contains
+helpers like rotation_to_euler to convert the resulting rotation matrix into user-friendly Roll, Pitch, and
+Yaw angles.
+• Trajectory Module (trajectory.py):
+This module manages time-series data. The
+create_trajectory_data_point function
+structures the robot’s state at a given moment, while
+export_trajectory_csv serializes the recorded
+data into a CSV file using Python’s standard csv library.
+• Workspace Module (workspace.py): This module
+provides functions for analyzing the robot’s reachable
+volume. The generate_workspace_heatmap function is capable of creating both 2D and 3D visualizations
+of manipulability using Plotly, offering insight into the
+robot’s dexterity across its operational envelope.
+• Asset Management (assets.py): The
+build_threejs_html function dynamically
+constructs the HTML and JavaScript payload required
+to render the 3D scene. It loads the necessary Three.js
+Streamlit UI
+(st.slider,
+st.metric, etc.)
+Python Backend
+(kinematics.py,
+etc.)
+Three.js Scene
+(components.html)
+User Input
+Joint Angles Kinematic
+Data
+Joint Angles
+Fig. 1. System architecture diagram illustrating the data flow between the user,
+the Streamlit UI, the Python backend, and the Three.js rendering component.
+runtime, model geometry, and font files, and injects the
+current joint angles before passing the complete HTML
+document to the frontend.
+B. Frontend and User Interface
+The UI is built with Streamlit, allowing for a pure Python
+implementation of a reactive web interface. The main interface
+code resides in src/streamlit_puma_interface.py.
+• 3D Visualization: The robot model is rendered in an
+iframe using streamlit.components.v1.html.
+This component receives the dynamically generated
+HTML from the assets.py module, creating a sandboxed environment for the Three.js scene. This avoids
+conflicts with Streamlit’s own DOM.
+• Interactive Controls: The UI is dominated by six
+sliders created with st.slider, one for each joint.
+These sliders are initialized from and write back to
+st.session_state, ensuring that the robot’s state
+persists across reruns. The joint limits are sourced from
+constants.py to match the physical robot’s constraints.
+• Analytics Dashboard: The right-hand column of the
+UI is dedicated to real-time analytics, organized within
+an st.expander. Key metrics are displayed using
+st.metric, and the current joint configuration is shown
+in a formatted JSON block with st.json.
+III. KEY FEATURES AND IMPLEMENTATION
+The platform provides a rich feature set designed for educational exploration.
+A. Interactive Simulation and 3D Visualization
+The main user interface, shown in Fig. 2, presents the 3D
+model and its controls side-by-side. The layout is managed by
+‘st.columns‘, dedicating the left column to the robot visualization and joint sliders, and the right to the analytics panel.
+This immediate visual feedback is crucial for developing an
+intuitive understanding of the robot’s kinematics.
+[INSERT SCREENSHOT OF THE MAIN UI
+HERE]
+Fig. 2. The main user interface, showing the 3D robot model on the left,
+joint control sliders below it, and the real-time analytics panel on the right.
+TABLE I
+DENAVIT-HARTENBERG PARAMETERS FOR THE PUMA 560
+Joint (i) θi (rad) di (m) ai (m) αi (rad)
+1 θ1 0.0 0.0 π/2
+2 θ2 0.0 0.432 0.0
+3 θ3 0.1495 0.0203 −π/2
+4 θ4 0.432 0.0 π/2
+5 θ5 0.0 0.0 −π/2
+6 θ6 0.0 0.0 0.0
+B. Real-Time Kinematic Analysis
+As users adjust the joint angles, the backend continuously
+recalculates the robot’s state. The DH parameters, as listed
+in Table I, are used to compute the transformation matrix for
+each link.
+The results are displayed in the ”End-Effector Analytics”
+expander, showing Cartesian position (X, Y, Z), Euler angles
+(Roll, Pitch, Yaw), linear velocity, and workspace utilization.
+C. Trajectory Recording and Visualization
+The system includes a full trajectory analysis suite. Users
+can start and stop recording, and the application will store
+a list of state dictionaries. When the recording is complete,
+the data is loaded into a Pandas DataFrame and visualized
+using Plotly within a set of ‘st.tabs‘, as shown in Fig. 3. The
+following plots are generated:
+[INSERT SCREENSHOT OF THE TRAJECTORY
+ANALYSIS PLOTS HERE]
+Fig. 3. The Trajectory Analysis section, showing the tabbed interface with
+Plotly charts for joint angles over time and the 3D end-effector path.
+• A timeline of all six joint angles.
+• A 3D scatter plot of the end-effector’s path through space.
+• Timelines of joint velocities and end-effector linear velocity.
+The captured data can be exported to a CSV file with a single
+click.
+IV. CONCLUSION
+This project successfully demonstrates the creation of a
+modern, web-based digital twin for the PUMA 560 robot. By
+leveraging a Python-centric stack with Streamlit and integrating a JavaScript-based 3D renderer, we have produced a tool
+that is both powerful for analysis and simple to access. The
+modular architecture and detailed, real-time analytics provide
+a robust foundation for robotics education. Future work could
+include the implementation of inverse kinematics to allow for
+Cartesian control, the integration of PyBullet for physics-based
+simulation and collision detection, and the development of
+more advanced workspace analysis tools.
+ACKNOWLEDGMENT
+The authors acknowledge the foundational work of the
+IIT Kharagpur Virtual Labs project. The Three.js 3D model
+and its original JavaScript implementation were adapted from
+their ”Forward Kinematics of PUMA 560” experiment, which
+provided the core assets and inspiration for this modern reimplementation.
+REFERENCES
+[1] R. P. Paul, B. Shimano, and G. E. Mayer, ”Kinematic control equations
+for simple manipulators,” IEEE Transactions on Systems, Man,, and
+Cybernetics, vol. 11, no. 6, pp. 449-455, 1981.
+[2] J. J. Craig, Introduction to Robotics: Mechanics and Control, 3rd ed.
+Pearson/Prentice Hall, 2005.
+[3] Streamlit Inc., ”Streamlit: The fastest way to build and share data apps,”
+2024. [Online]. Available: https://streamlit.io
+[4] Mr.doob, ”Three.js: JavaScript 3D library,” 2024. [Online]. Available:
+https://threejs.org
+[5] E. Coumans and Y. Bai, ”PyBullet, a Python module for physics simulation for games, robotics and machine learning,” 2016-2021. [Online].
+Available: http://pybullet.org
+[6] J. D. Hunter, ”Matplotlib: A 2D graphics environment,” Computing in
+Science & Engineering, vol. 9, no. 3, pp. 90-95, 2007.
+[7] Plotly Technologies Inc., ”Collaborative data science,” 2015. [Online].
+Available: https://plot.ly.
