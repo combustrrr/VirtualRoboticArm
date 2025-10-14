@@ -1,161 +1,309 @@
-"""
-Interactive 3D JCB Robotic Arm Mini Project
-Main entry point for the Virtual Robotic Arm simulation
-"""
+"""Entry point for the Virtual Robotic Arm toolkit."""
 import sys
 import os
+import subprocess
+import importlib
+import logging
+from pathlib import Path
+
+
+REPO_ROOT = Path(__file__).resolve().parent
+SRC_PATH = REPO_ROOT / "src"
+
+if str(SRC_PATH) not in sys.path:
+    sys.path.insert(0, str(SRC_PATH))
+
+
+_IMPORT_NAME_OVERRIDES = {
+    "opencv-python": "cv2",
+    "opencv-python-headless": "cv2",
+    "pillow": "PIL",
+}
+
+from app.logging_utils import configure_logging, get_logger
+
+
+configure_logging("launcher")
+LOGGER = get_logger(__name__)
+
+def _get_requirements_file_path():
+    """Get the path to requirements.txt file."""
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), 'requirements.txt')
+
+
+def _read_requirements_file(requirements_path):
+    """Read and parse requirements from requirements.txt file."""
+    if not os.path.exists(requirements_path):
+        LOGGER.warning("requirements.txt not found. Skipping dependency check.")
+        return None
+    
+    try:
+        with open(requirements_path, 'r') as f:
+            requirements = [line.strip() for line in f.readlines() 
+                          if line.strip() and not line.strip().startswith('#')]
+        return requirements
+    except Exception as e:
+        LOGGER.exception("Failed to read requirements.txt")
+        return False
+
+
+def _extract_package_name(requirement):
+    """Extract requirement and importable module names from a requirement string."""
+    if not requirement:
+        return None, None
+
+    requirement_name = requirement.split(';', 1)[0]
+    for delimiter in (">=", "<=", "==", "!=", "~=", ">", "<"):
+        requirement_name = requirement_name.split(delimiter)[0]
+
+    package_name = requirement_name.strip()
+    if not package_name:
+        return None, None
+
+    module_name = _IMPORT_NAME_OVERRIDES.get(package_name.lower(), package_name)
+    return package_name, module_name
+
+
+def _check_package_installed(module_name):
+    """Check if a module is importable in the current environment."""
+    try:
+        importlib.import_module(module_name)
+        return True
+    except ImportError:
+        LOGGER.debug("Package not found: %s", module_name)
+        return False
+
+
+def _find_missing_packages(requirements):
+    """Find packages that are missing from the current environment."""
+    missing_packages = []
+    
+    for requirement in requirements:
+        package_name, module_name = _extract_package_name(requirement)
+        if not module_name:
+            continue
+            
+        if _check_package_installed(module_name):
+            LOGGER.info("Dependency ready: %s (requirement: %s)", module_name, requirement)
+        else:
+            LOGGER.warning("Dependency missing: %s (module: %s)", requirement, module_name)
+            missing_packages.append(requirement)
+    
+    return missing_packages
+
+
+def _handle_installation_timeout(missing_packages):
+    """Handle installation timeout gracefully."""
+    LOGGER.error("Installation timed out while installing dependencies")
+    print("WARNING: Installation timed out. This may be due to network issues.")
+    print("MANUAL INSTALLATION: Please try installing manually with:")
+    print(f"pip install {' '.join(missing_packages)}")
+    print("\nCONTINUING: Proceeding with available dependencies...")
+    return True
+
+
+def _handle_network_error(missing_packages):
+    """Handle network-related installation errors."""
+    LOGGER.error("Network issue detected during dependency installation")
+    print("WARNING: Network connectivity issue detected during installation.")
+    print("MANUAL INSTALLATION: Please check your internet connection and try installing manually with:")
+    print(f"pip install {' '.join(missing_packages)}")
+    print("\nCONTINUING: Proceeding with available dependencies...")
+    return True
+
+
+def _handle_installation_error(e, missing_packages):
+    """Handle general installation errors."""
+    error_msg = e.stderr if hasattr(e, 'stderr') and e.stderr else str(e)
+    LOGGER.error("Failed to install dependencies", exc_info=e)
+    print(f"ERROR: Failed to install dependencies: {e}")
+    print(f"Error details: {error_msg}")
+    print("\nMANUAL INSTALLATION: You can try installing manually with:")
+    print(f"pip install {' '.join(missing_packages)}")
+    return False
+
+
+def _is_network_error(error_msg):
+    """Check if error message indicates a network-related issue."""
+    network_keywords = ['timeout', 'connection', 'network', 'http']
+    return any(keyword in error_msg.lower() for keyword in network_keywords)
+
+
+def _install_missing_packages(missing_packages):
+    """Install missing packages using pip."""
+    print(f"\nINSTALLING: Installing {len(missing_packages)} missing dependencies...")
+    print("This may take a few minutes...")
+    
+    try:
+        cmd = [sys.executable, '-m', 'pip', 'install', '--timeout', '60'] + missing_packages
+        subprocess.run(cmd, check=True, capture_output=True, text=True, timeout=180)
+        LOGGER.info("Installed %s missing dependencies", len(missing_packages))
+        print("SUCCESS: All dependencies installed successfully!")
+        return True
+        
+    except subprocess.TimeoutExpired:
+        return _handle_installation_timeout(missing_packages)
+        
+    except subprocess.CalledProcessError as e:
+        error_msg = e.stderr if e.stderr else str(e)
+        if _is_network_error(error_msg):
+            return _handle_network_error(missing_packages)
+        else:
+            return _handle_installation_error(e, missing_packages)
+            
+    except Exception as e:
+        LOGGER.exception("Unexpected error during dependency installation")
+        print(f"ERROR: Unexpected error during installation: {e}")
+        print("\nMANUAL INSTALLATION: You can try installing manually with:")
+        print(f"pip install {' '.join(missing_packages)}")
+        return False
+
+
+def check_and_install_dependencies():
+    """Check for required dependencies and install them if missing."""
+    LOGGER.info("Checking dependencies")
+    print("Checking dependencies...")
+    
+    requirements_path = _get_requirements_file_path()
+    requirements = _read_requirements_file(requirements_path)
+    
+    if requirements is None:
+        return True
+    elif requirements is False:
+        return False
+    
+    missing_packages = _find_missing_packages(requirements)
+    
+    if missing_packages:
+        return _install_missing_packages(missing_packages)
+    else:
+        LOGGER.info("All dependencies already installed")
+        print("SUCCESS: All dependencies are already installed!")
+        return True
+
+
+def _print_header():
+    """Print the application header."""
+    print("=" * 60)
+    print("PUMA 560 VIRTUAL ROBOTIC ARM")
+    print("=" * 60)
+    print("Streamlit-driven digital twin with cinematic 3D rendering")
+    print()
+
+
+def _print_dependency_status(deps_result):
+    """Print dependency check results."""
+    if deps_result:
+        LOGGER.info("Dependency check completed successfully")
+        print("\nREADY: All dependencies are ready!")
+    else:
+        LOGGER.warning("Continuing with missing dependencies")
+        print("\nWARNING: Some dependencies may be missing, but continuing...")
+        print("The application will run with reduced functionality.")
+
+
+def _get_user_choice():
+    """Get user's menu choice with error handling."""
+    print("\nSelect interface mode:")
+    print("1. Launch Streamlit interface")
+    print("2. Exit")
+    
+    try:
+        choice = input("\nEnter your choice (1-2): ").strip()
+        return choice
+    except KeyboardInterrupt:
+        LOGGER.info("Launcher interrupted by user")
+        print("\nExiting...")
+        sys.exit(0)
+
+
+def _handle_menu_choice(choice):
+    """Handle the user's menu choice."""
+    if choice == "1":
+        LOGGER.info("User selected Streamlit launch")
+        launch_streamlit_interface()
+        return False  # Continue menu loop
+    elif choice == "2":
+        LOGGER.info("User exited application")
+        print("Goodbye!")
+        return True   # Exit menu loop
+    else:
+        LOGGER.warning("Invalid menu choice: %s", choice)
+        print("Invalid choice. Please enter 1-2.")
+        return False  # Continue menu loop
+
+
+def _run_main_menu():
+    """Run the main application menu loop."""
+    while True:
+        choice = _get_user_choice()
+        should_exit = _handle_menu_choice(choice)
+        if should_exit:
+            break
+
 
 def main():
-    """Main demonstration function"""
-    print("=" * 60)
-    print("INTERACTIVE 3D JCB ROBOTIC ARM MINI PROJECT")
-    print("=" * 60)
+    """Main application entry point."""
+    LOGGER.info("Launcher started")
+    _print_header()
     
-    while True:
-        print("\nSelect simulation mode:")
-        print("1. Enhanced CAD Interactive Arm (Recommended)")
-        print("2. Web-Based Interface")
-        print("3. Real CAD Integration")
-        print("4. Matplotlib Visualization")
-        print("5. Realistic Texture Demo")
-        print("6. Exit")
-        
-        try:
-            choice = input("\nEnter your choice (1-6): ").strip()
-        except KeyboardInterrupt:
-            print("\nExiting...")
-            sys.exit(0)
-        
-        if choice == "1":
-            run_enhanced_cad_interactive_arm()
-        elif choice == "2":
-            run_web_interactive_arm()
-        elif choice == "3":
-            run_real_cad_integration()
-        elif choice == "4":
-            run_matplotlib_visualization()
-        elif choice == "5":
-            run_realistic_texture_demo()
-        elif choice == "6":
-            print("Goodbye!")
-            break
-        else:
-            print("Invalid choice. Please enter 1-6.")
+    # Check and install dependencies first
+    deps_result = check_and_install_dependencies()
+    _print_dependency_status(deps_result)
+    
+    LOGGER.info("Displaying launcher menu")
+    print("Starting the application...")
+    _run_main_menu()
 
 
-def run_enhanced_cad_interactive_arm():
-    """Run Enhanced CAD Interactive Arm"""
+def _get_streamlit_app_path():
+    """Get the path to the Streamlit application."""
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), 
+                       'src', 'streamlit_puma_interface.py')
+
+
+def _launch_streamlit_process(src_path):
+    """Launch the Streamlit process."""
+    LOGGER.info("Starting Streamlit server via subprocess")
+    print("Starting Streamlit server...")
+    print(f"Command: streamlit run {src_path}")
+    print("The application will open in your default web browser.")
+    print("Press Ctrl+C to stop the server.")
+    print()
+    
+    subprocess.run([sys.executable, '-m', 'streamlit', 'run', src_path], check=True)
+    LOGGER.info("Streamlit process exited cleanly")
+
+
+def _handle_streamlit_error(e, src_path):
+    """Handle Streamlit launch errors."""
+    LOGGER.error("Error launching Streamlit", exc_info=e)
+    print(f"Error launching Streamlit: {e}")
+    print("You can also launch it manually with:")
+    print(f"streamlit run {src_path}")
+
+
+def launch_streamlit_interface():
+    """Launch the Streamlit-based PUMA 560 interface."""
     print("\n" + "=" * 50)
-    print("LAUNCHING ENHANCED CAD INTERACTIVE ARM")
+    print("LAUNCHING STREAMLIT INTERFACE")
     print("=" * 50)
     
-    src_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 
-                           'src', 'enhanced_cad_interactive_arm.py')
+    src_path = _get_streamlit_app_path()
     
-    if os.path.exists(src_path):
-        try:
-            sys.path.insert(0, os.path.dirname(src_path))
-            import enhanced_cad_interactive_arm
-            enhanced_cad_interactive_arm.main()
-        except Exception as e:
-            print(f"Error running Enhanced CAD Interactive Arm: {e}")
-            print("You can also run it directly with:")
-            print("python src/enhanced_cad_interactive_arm.py")
-    else:
-        print(f"Enhanced CAD Interactive Arm script not found at: {src_path}")
+    if not os.path.exists(src_path):
+        LOGGER.error("Streamlit application missing: %s", src_path)
+        print(f"Streamlit application not found at: {src_path}")
         print("Please ensure all source files are properly installed.")
-
-
-def run_web_interactive_arm():
-    """Run Web Interactive Arm"""
-    print("\n" + "=" * 50)
-    print("LAUNCHING WEB-BASED INTERFACE")
-    print("=" * 50)
+        return
     
-    src_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 
-                           'src', 'web_interactive_arm.py')
-    
-    if os.path.exists(src_path):
-        try:
-            sys.path.insert(0, os.path.dirname(src_path))
-            import web_interactive_arm
-            web_interactive_arm.main()
-        except Exception as e:
-            print(f"Error running Web Interactive Arm: {e}")
-            print("You can also run it directly with:")
-            print("python src/web_interactive_arm.py")
-    else:
-        print(f"Web Interactive Arm script not found at: {src_path}")
-        print("Please ensure all source files are properly installed.")
-
-
-def run_real_cad_integration():
-    """Run Real CAD Integration"""
-    print("\n" + "=" * 50)
-    print("LAUNCHING REAL CAD INTEGRATION")
-    print("=" * 50)
-    
-    src_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 
-                           'src', 'real_cad_integration.py')
-    
-    if os.path.exists(src_path):
-        try:
-            sys.path.insert(0, os.path.dirname(src_path))
-            import real_cad_integration
-            real_cad_integration.main()
-        except Exception as e:
-            print(f"Error running Real CAD Integration: {e}")
-            print("You can also run it directly with:")
-            print("python src/real_cad_integration.py")
-    else:
-        print(f"Real CAD Integration script not found at: {src_path}")
-        print("Please ensure all source files are properly installed.")
-
-
-def run_matplotlib_visualization():
-    """Run Matplotlib Visualization"""
-    print("\n" + "=" * 50)
-    print("LAUNCHING MATPLOTLIB VISUALIZATION")
-    print("=" * 50)
-    
-    src_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 
-                           'src', 'interactive_matplotlib_arm.py')
-    
-    if os.path.exists(src_path):
-        try:
-            sys.path.insert(0, os.path.dirname(src_path))
-            import interactive_matplotlib_arm
-            interactive_matplotlib_arm.main()
-        except Exception as e:
-            print(f"Error running Matplotlib Visualization: {e}")
-            print("You can also run it directly with:")
-            print("python src/interactive_matplotlib_arm.py")
-    else:
-        print(f"Matplotlib Visualization script not found at: {src_path}")
-        print("Please ensure all source files are properly installed.")
-
-
-def run_realistic_texture_demo():
-    """Run Realistic Texture Demo"""
-    print("\n" + "=" * 50)
-    print("LAUNCHING REALISTIC TEXTURE DEMO")
-    print("=" * 50)
-    
-    src_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 
-                           'src', 'realistic_texture_system.py')
-    
-    if os.path.exists(src_path):
-        try:
-            sys.path.insert(0, os.path.dirname(src_path))
-            import realistic_texture_system
-            realistic_texture_system.main()
-        except Exception as e:
-            print(f"Error running Realistic Texture Demo: {e}")
-            print("You can also run it directly with:")
-            print("python src/realistic_texture_system.py")
-    else:
-        print(f"Realistic Texture Demo script not found at: {src_path}")
-        print("Please ensure all source files are properly installed.")
+    try:
+        _launch_streamlit_process(src_path)
+    except subprocess.CalledProcessError as e:
+        _handle_streamlit_error(e, src_path)
+    except KeyboardInterrupt:
+        LOGGER.info("Streamlit launch interrupted by user")
+        print("\nStopping Streamlit server...")
 
 
 if __name__ == "__main__":

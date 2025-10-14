@@ -5,6 +5,10 @@ pybullet>=3.2.0
 # Scientific computing and visualization
 numpy>=1.21.0
 matplotlib>=3.5.0
+plotly>=5.18.0
+
+# Web UI
+streamlit>=1.32.0
 
 # Image processing and computer vision
 opencv-python>=4.5.0

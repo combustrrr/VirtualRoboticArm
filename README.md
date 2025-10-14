@@ -1,117 +1,69 @@
-# Interactive 3D JCB Robotic Arm Mini Project
+# Virtual Robotic Arm – PUMA 560 Digital Twin
 
-A comprehensive simulation system featuring a professional JCB-style robotic arm with interactive controls, realistic physics, and VFX-quality rendering.
+A Streamlit-powered control room for the classic Unimation PUMA 560 robot. Explore six-degrees-of-freedom kinematics, cinematic 3D rendering, and quick engineering insights from a modern web UI.
+
+## ✨ Highlights
+- **Authentic PUMA 560 geometry** with Craig DH parameters and accurate joint limits
+- 🎨 **Official IIT KGP Virtual Labs model** with high-fidelity Three.js rendering and interactive controls
+- **Streamlit control surface** featuring six joint sliders, pose metrics, and instant validation feedback
+- **End-Effector Analytics** with real-time position, orientation, velocity, and energy consumption tracking
+- **Trajectory Recording** with CSV export, joint angle timelines, and comprehensive motion analysis
+- **Workspace Analysis** with manipulability heatmaps, reachability plots, and singularity detection
+- **One-command startup** via `python main.py`, including dependency verification and port management
 
 ## 🚀 Quick Start
-
-```bash
-python main.py
-```
-
-Select from multiple simulation modes:
-1. **Enhanced CAD Interactive Arm** (Recommended) - Full-featured 4-DOF control
-2. **Web-Based Interface** - Browser-based controls
-3. **Real CAD Integration** - Professional CAD file processing
-4. **Matplotlib Visualization** - Interactive workspace analysis
-5. **Realistic Texture Demo** - Photographic texture showcase
-
-## 🎮 Features
-
-### Core Capabilities
-- **4-DOF Control**: Boom, Stick, Bucket, Base Rotation
-- **Real-Time Physics**: PyBullet simulation engine
-- **Multiple Camera Views**: Wide shot, operator view, dramatic angles
-- **Interactive UI**: Sliders, keyboard controls, mouse navigation
-
-### Visual Quality
-- **VFX-Grade Rendering**: Professional lighting and shadows
-- **Photorealistic Textures**: Authentic JCB materials with weathering
-- **Authentic Styling**: Professional yellow/orange construction equipment design
-- **High-Resolution Output**: 1920x1080 optimized rendering
-
-### Technical Features
-- **CAD Integration**: Support for IGS, STEP, SLDPRT file formats
-- **Workspace Analysis**: Reachable area mapping and joint studies
-- **Automated Sequences**: Complete excavation cycles
-- **Cross-Platform Support**: Native and web-based interfaces
-
-## 📁 Project Structure
-
-```
-VirtualRoboticArm/
-├── src/                                    # Core source code
-│   ├── enhanced_cad_interactive_arm.py     # Main interactive system
-│   ├── cad_file_processor.py              # CAD file processing
-│   ├── realistic_texture_system.py        # Texture enhancement
-│   ├── web_interactive_arm.py             # Web interface
-│   ├── interactive_3d_robotic_arm.py      # 3D visualization
-│   ├── real_cad_integration.py            # CAD integration
-│   └── interactive_matplotlib_arm.py      # Matplotlib interface
-├── assets/                                # Project assets
-│   ├── realistic_textures/                # Realistic textures
-│   ├── models/                            # 3D models and CAD files
-│   └── texture_enhancement_demo/          # Texture demos
-├── demos/                                 # Demonstration materials
-│   └── enhanced_jcb_interactive_demo.gif  # Main demonstration
-├── docs/                                  # Documentation
-│   ├── README_CAD_INTEGRATION.md         # CAD integration guide
-│   ├── README_ENHANCED.md                # Enhanced features
-│   └── INTERACTIVE_USAGE_GUIDE.md        # Usage instructions
-├── requirements.txt                       # Python dependencies
-└── main.py                               # Main entry point
-```
-
-## 🔧 Dependencies
-
 ```bash
 pip install -r requirements.txt
+python main.py
+```
+The launcher installs missing packages, discovers a free port, and spawns the Streamlit experience in your browser. Prefer to bypass the menu? Run:
+```bash
+streamlit run src/streamlit_puma_interface.py
 ```
 
-## 🎬 Demonstrations
+## 🧭 Interface Tour
+- **Joint Console** – Six sliders with PUMA-safe limits, dual-column layout, and real-time numerical readouts
+- **3D Robot Visualization** – Official IIT KGP Virtual Labs Three.js model with interactive camera controls
+- **End-Effector Analytics** – Real-time position (X/Y/Z), orientation (roll/pitch/yaw), and velocity tracking
+- **Trajectory Recording** – Record joint movements with CSV export and multi-tab analysis (angles, paths, velocities, energy)
+- **Workspace Analysis** – Generate manipulability heatmaps with 2D/3D visualizations and statistical analysis
+- **Real-time Feedback** – Singularity warnings and performance metrics for educational use
 
-The project includes professional demonstration materials:
-- **Interactive GIF Demos**: Complete excavation sequences
-- **Technical Analysis**: Workspace studies and joint configurations
-- **Texture Showcases**: Before/after enhancement comparisons
-
-## 🚜 JCB Specifications
-
-- **Max Reach**: 8.0 meters
-- **Max Dig Depth**: 6.2 meters  
-- **Bucket Capacity**: 1.2 cubic meters
-- **Operating Weight**: 14,500 kg
-- **Engine Power**: 100 kW
-
-## 📋 Usage Examples
-
-### Enhanced Interactive Control
-```python
-python src/enhanced_cad_interactive_arm.py
+## Project Structure
+```
+VirtualRoboticArm/
+├── main.py                     # CLI launcher with dependency checks
+├── requirements.txt            # Python dependencies
+├── src/
+│   └── streamlit_puma_interface.py  # Streamlit UI + kinematics + rendering
+├── assets/
+│   └── models/
+│       └── puma560_vlab_mirror/  # IIT KGP Virtual Labs PUMA 560 model
+└── .vscode/                     # VS Code configuration and debug settings
 ```
 
-### Web Interface
-```python
-python src/web_interactive_arm.py
-# Open browser to http://localhost:8080
-```
+## 📦 Dependencies
+Core packages are listed in `requirements.txt`:
+- `numpy` – numerical operations and DH transforms
+- `plotly` – physically-inspired 3D rendering and camera control
+- `streamlit` – reactive UI framework and caching primitives
+- `pybullet`, `matplotlib`, `opencv-python`, `Pillow` – optional legacy modules retained for compatibility
 
-### CAD Integration
-```python
-python src/real_cad_integration.py
-# Place CAD files in assets/models/
-```
+Install everything with `pip install -r requirements.txt` or let `python main.py` handle it automatically.
 
-## 🎯 Purpose
+## Development Notes
+- The main application integrates the official IIT KGP Virtual Labs Three.js PUMA 560 model via HTML components
+- Advanced analytics include real-time end-effector position/orientation tracking, velocity estimation, and energy consumption calculations
+- Trajectory recording with CSV export supports joint angle timelines, end-effector paths, velocities, and energy analysis
+- Workspace heatmaps provide manipulability analysis with 2D/3D visualizations and Monte Carlo sampling
+- Scene lighting and camera controls are handled through the embedded Three.js interface
+- Workspace sampling uses scipy for efficient manipulability calculations and reachability analysis
 
-Perfect for:
-- Computer graphics project demonstrations
-- Virtual robot prototyping
-- Interactive simulation showcases
-- Educational robotics visualization
-- VFX-quality animation generation
+## Where to Go Next
+1. Add trajectory optimization algorithms for smooth motion planning
+2. Implement collision detection with workspace obstacles
+3. Add support for custom DH parameters for different robot configurations
+4. Integrate path planning algorithms (RRT, A*, etc.) for autonomous operation
+5. Add export capabilities for simulation data and analysis reports
 
----
-
-**Author**: Sarthak MDM23101B0019  
-**Course**: Robotics Semester 5  
-**Institution**: [University Name]
+Enjoy exploring the reborn PUMA 560!

@@ -1,0 +1,11 @@
+HTTrack3.49-5 launched on Sun, 12 Oct 2025 18:37:03 at https://mr-iitkgp.vlabs.ac.in/exp/forward-kinematics/simulation/forward-kinematics-of-puma-560.html
+(httrack https://mr-iitkgp.vlabs.ac.in/exp/forward-kinematics/simulation/forward-kinematics-of-puma-560.html -O ./assets/models/puma560_vlab_mirror -%v -N100 -c8 -r3 )
+
+Information, Warnings and Errors reported for this mirror:
+note:	the hts-log.txt file, and hts-cache folder, may contain sensitive information,
+	such as username/password authentication for websites mirrored in this project
+	do not share these files/folders if you want these information to remain private
+
+
+HTTrack Website Copier/3.49-5 mirror complete in 27 seconds : 27 links scanned, 26 files written (9162639 bytes overall) [2685242 bytes received at 99453 bytes/sec], 9040986 bytes transferred using HTTP compression in 24 files, ratio 28%, 9.0 requests per connection
+(No errors, 0 warnings, 0 messages)
