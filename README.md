@@ -59,6 +59,26 @@ Install everything with `pip install -r requirements.txt` or let `python main.py
 - Scene lighting and camera controls are handled through the embedded Three.js interface
 - Workspace sampling uses scipy for efficient manipulability calculations and reachability analysis
 
+## 📄 Documentation for LinkedIn & Portfolio
+
+Comprehensive documentation is available for presenting this project professionally:
+
+- **[DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md)** — Start here! Navigation guide for all documentation
+- **[LINKEDIN_SUBMISSION_GUIDE.md](LINKEDIN_SUBMISSION_GUIDE.md)** — Step-by-step guide for adding to LinkedIn
+- **[LINKEDIN_QUICK_REFERENCE.md](LINKEDIN_QUICK_REFERENCE.md)** — Copy-paste ready content for LinkedIn
+- **[LINKEDIN_PROJECT_DETAILS.md](LINKEDIN_PROJECT_DETAILS.md)** — Comprehensive project details and descriptions
+- **[PROJECT_SUMMARY.md](PROJECT_SUMMARY.md)** — One-page professional project overview
+
+These documents include:
+✅ Ready-to-use LinkedIn project descriptions  
+✅ Skills and technologies lists  
+✅ LinkedIn post templates (3 versions)  
+✅ Interview preparation Q&A  
+✅ Portfolio content suggestions  
+✅ Team member and contributor information  
+
+**Perfect for:** LinkedIn profiles, job applications, portfolios, and professional presentations!
+
 ## Where to Go Next
 1. Add trajectory optimization algorithms for smooth motion planning
 2. Implement collision detection with workspace obstacles
